@@ -6,7 +6,8 @@ import sys
 import ctypes
 import winreg
 import platform
-import psutil  # Para obtener el rendimiento del sistema
+import psutil
+import locale  # Para obtener el rendimiento del sistema
 
 # Función para obtener permisos de administrador
 def es_admin():
@@ -226,6 +227,118 @@ def mostrar_procesos():
     # Obtener los procesos del sistema y mostrarlos
     for proc in psutil.process_iter(['pid', 'name']):
         lista_procesos.insert("", "end", text=f"{proc.info['name']} (PID: {proc.info['pid']})")
+# Función para obtener permisos de administrador
+def es_adminin():
+    try:
+        return ctypes.windll.shell32.IsUserAnAdmin()
+    except:
+        return False
+
+def ejecutar_como_adminin():
+    if not es_adminin():
+        ctypes.windll.shell32.ShellExecuteW(
+            None, "runas", sys.executable, ' '.join(sys.argv), None, 1)
+        sys.exit()
+
+# Función para obtener la información del sistema
+def obtener_informacion_sistema():
+    info = {}
+    info["Sistema operativo"] = platform.system()
+    info["Versión del sistema operativo"] = platform.version()
+    info["Arquitectura"] = platform.architecture()[0]
+    info["Nombre del equipo"] = platform.node()
+    info["Procesador"] = platform.processor()
+    info["Idioma del sistema"] = locale.getdefaultlocale()[0]
+
+    mem = psutil.virtual_memory()
+    info["Memoria RAM total"] = f"{round(mem.total / (1024**3), 2)} GB"
+
+    disk = psutil.disk_usage('/')
+    info["Espacio total en disco"] = f"{round(disk.total / (1024**3), 2)} GB"
+    info["Espacio libre en disco"] = f"{round(disk.free / (1024**3), 2)} GB"
+
+    if platform.system() == "Windows":
+        try:
+            fabricante = subprocess.check_output("wmic computersystem get manufacturer", shell=True).decode().split('\n')[1].strip()
+            modelo = subprocess.check_output("wmic computersystem get model", shell=True).decode().split('\n')[1].strip()
+            info["Fabricante"] = fabricante
+            info["Modelo"] = modelo
+        except Exception as e:
+            info["Fabricante"] = "No disponible"
+            info["Modelo"] = "No disponible"
+    
+    return info
+
+# Función para mostrar la información del sistema en el marco de visualización
+def mostrar_informacion_sistema():
+    # Limpiar el frame de visualización
+    for widget in frame_visualizacion.winfo_children():
+        widget.destroy()
+
+    label_titulo = ttk.Label(frame_visualizacion, text="Especificaciones del Sistema", font=("Arial", 14, "bold"))
+    label_titulo.pack(pady=10)
+
+    info = obtener_informacion_sistema()
+    for key, value in info.items():
+        etiqueta = ttk.Label(frame_visualizacion, text=f"{key}: {value}")
+        etiqueta.pack(anchor="w", padx=10, pady=2)
+
+        # Función para obtener permisos de administrador
+def es_adminin():
+    try:
+        return ctypes.windll.shell32.IsUserAnAdmin()
+    except:
+        return False
+
+def ejecutar_como_adminin():
+    if not es_adminin():
+        ctypes.windll.shell32.ShellExecuteW(
+            None, "runas", sys.executable, ' '.join(sys.argv), None, 1)
+        sys.exit()
+
+# Función para obtener la información del sistema
+def obtener_informacion_sistema():
+    info = {}
+    info["Sistema operativo"] = platform.system()
+    info["Versión del sistema operativo"] = platform.version()
+    info["Arquitectura"] = platform.architecture()[0]
+    info["Nombre del equipo"] = platform.node()
+    info["Procesador"] = platform.processor()
+    info["Idioma del sistema"] = locale.getdefaultlocale()[0]
+
+    mem = psutil.virtual_memory()
+    info["Memoria RAM total"] = f"{round(mem.total / (1024**3), 2)} GB"
+
+    disk = psutil.disk_usage('/')
+    info["Espacio total en disco"] = f"{round(disk.total / (1024**3), 2)} GB"
+    info["Espacio libre en disco"] = f"{round(disk.free / (1024**3), 2)} GB"
+
+    if platform.system() == "Windows":
+        try:
+            fabricante = subprocess.check_output("wmic computersystem get manufacturer", shell=True).decode().split('\n')[1].strip()
+            modelo = subprocess.check_output("wmic computersystem get model", shell=True).decode().split('\n')[1].strip()
+            info["Fabricante"] = fabricante
+            info["Modelo"] = modelo
+        except Exception as e:
+            info["Fabricante"] = "No disponible"
+            info["Modelo"] = "No disponible"
+    
+    return info
+
+# Función para mostrar la información del sistema en el marco de visualización
+def mostrar_informacion_sistema():
+    # Limpiar el frame de visualización
+    for widget in frame_visualizacion.winfo_children():
+        widget.destroy()
+
+    label_titulo = ttk.Label(frame_visualizacion, text="Especificaciones del Sistema", font=("Arial", 14, "bold"))
+    label_titulo.pack(pady=10)
+
+    info = obtener_informacion_sistema()
+    for key, value in info.items():
+        etiqueta = ttk.Label(frame_visualizacion, text=f"{key}: {value}")
+        etiqueta.pack(anchor="w", padx=10, pady=2)
+
 
 # Ventana principal
 root = tk.Tk()
@@ -240,14 +353,24 @@ frame_menu.grid(row=0, column=0, sticky="ns", padx=10, pady=10)
 label_menu = ttk.Label(frame_menu, text="Menú", font=("Arial", 14))
 label_menu.pack(pady=10)
 
+
 # Botones de menú
 btn_config_cortafuegos = ttk.Button(frame_menu, text="Abrir Configuración del Cortafuegos", command=abrir_configuracion_cortafuegos)
 btn_config_cortafuegos.pack(pady=5)
 
+
+#ver programas
 btn_programas_instalados = ttk.Button(frame_menu, text="Ver Programas Instalados", command=abrir_programas_instalados)
 btn_programas_instalados.pack(pady=5)
 
+#boton de mostrar procesos
+
 btn_procesos = ttk.Button(frame_menu, text="Ver Procesos", command=mostrar_procesos)
+btn_procesos.pack(pady=5)
+
+
+#boton de mostrar informacion
+btn_procesos = ttk.Button(frame_menu, text="mostrar_informacion_sistema", command=mostrar_informacion_sistema)
 btn_procesos.pack(pady=5)
 
 # Etiqueta de título y la información del sistema
